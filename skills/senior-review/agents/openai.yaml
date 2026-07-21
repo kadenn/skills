@@ -1,0 +1,4 @@
+interface:
+  display_name: "Senior Review"
+  short_description: "Run an architecture-first high-signal review"
+  default_prompt: "Use $senior-review to review this change for design and implementation risks."

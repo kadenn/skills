@@ -9,7 +9,7 @@ Six portable, tested workflows for AI agents. Each skill follows the open Agent 
 | `pushback` | Challenge consequential plans without becoming an obstruction. |
 | `chronos` | Use reliable wall-clock context for deadlines, schedules, and stuck loops. |
 | `shipit` | Move changes through git, commits, pushes, PRs, and merges safely. |
-| `full-review` | Review architecture first, then report high-confidence implementation defects. |
+| `senior-review` | Review architecture first, then report high-confidence implementation defects. |
 
 ## Install a skill
 

@@ -1,9 +1,9 @@
 ---
-name: full-review
-description: Run an architecture-first, high-signal review of a pull request, branch, commit range, patch, or working-tree diff. Use when the user asks for a full review, deep review, architecture review, senior review, or a review that must prioritize concrete bugs and design risks over lint-style commentary. Inspect beyond the diff, lock architectural conclusions, then report only evidence-backed implementation findings.
+name: senior-review
+description: Run an architecture-first, high-signal review of a pull request, branch, commit range, patch, or working-tree diff. Use when the user asks for a senior review, full review, deep review, architecture review, or a review that must prioritize concrete bugs and design risks over lint-style commentary. Inspect beyond the diff, lock architectural conclusions, then report only evidence-backed implementation findings.
 ---
 
-# Full Review
+# Senior Review
 
 Review in two gated phases. First decide whether the change belongs and is shaped correctly. Then inspect implementation correctness. A line fix is wasted when the code should not exist in that form.
 
@@ -83,6 +83,8 @@ Keep an implementation finding only when all are true:
 - A concrete input, state, sequence, or threat produces a wrong result or meaningful risk.
 - The relevant code path and repository convention were verified.
 - The suggested correction is applicable to this repository.
+
+An unconstrained type annotation alone does not prove that every type-compatible value reaches the code in production. Before reporting a malformed or missing input as a bug, verify that a caller, schema, contract, test, or documented boundary permits it.
 
 Architecture findings use a different bar: a senior engineer would raise the issue in design review, the maintenance or delivery cost is concrete, and a better direction is named.
 

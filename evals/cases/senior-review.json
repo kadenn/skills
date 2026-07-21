@@ -1,10 +1,10 @@
 {
-  "skill": "full-review",
+  "skill": "senior-review",
   "cases": [
     {
       "id": "find-existing-capability",
-      "fixture": "full-review-architecture",
-      "prompt": "Run a report-only full review of change.diff. Inspect the repository files in this fixture, not only the patch.",
+      "fixture": "senior-review-architecture",
+      "prompt": "Run a report-only senior review of change.diff. Inspect the repository files in this fixture, not only the patch.",
       "must_match": [
         "(?i)(architecture verdict)",
         "(?i)(reinvent|duplicate|existing)",
@@ -12,7 +12,6 @@
         "(?i)(order_cache.py|cache_keys.py)"
       ],
       "must_not_match": ["(?i)(looks good overall|only formatting)"],
-      "max_questions": 1,
       "rubric": [
         "Finds the existing shared cache-key capability by reading beyond the diff.",
         "Raises it in the architecture verdict with a concrete reuse direction.",
@@ -21,17 +20,16 @@
     },
     {
       "id": "find-bypassable-security-default",
-      "fixture": "full-review-security",
-      "prompt": "Run a report-only full review of change.diff. The export endpoint handles customer records. Inspect the implementation and tests in the fixture.",
+      "fixture": "senior-review-security",
+      "prompt": "Run a report-only senior review of change.diff. The export endpoint handles customer records. Inspect the implementation and tests in the fixture.",
       "must_match": [
         "(?i)(architecture verdict)",
         "(?i)(redact_pii|PII)",
         "(?i)(setdefault|override|false)",
         "(?i)(MEDIUM|HIGH)",
-        "(?i)(assign|force|reject)"
+        "(?i)(assign|force|reject|unconditional|strip|ignore)"
       ],
       "must_not_match": ["(?i)(no findings|safe because default)"],
-      "max_questions": 1,
       "rubric": [
         "Proves that a caller can pass redact_pii=false and bypass the intended invariant.",
         "Derives severity from customer-data exposure rather than calling it a style issue.",
@@ -40,8 +38,8 @@
     },
     {
       "id": "do-not-invent-findings",
-      "fixture": "full-review-clean",
-      "prompt": "Run a report-only full review of change.diff. Report only findings that pass the evidence gate.",
+      "fixture": "senior-review-clean",
+      "prompt": "Run a report-only senior review of change.diff. Report only findings that pass the evidence gate.",
       "must_match": ["(?i)(architecture verdict)", "(?i)(no findings|no implementation findings|nothing.*report)"],
       "must_not_match": [
         "(?i)(rename this variable|import order|formatting nit|maybe.*issue)",

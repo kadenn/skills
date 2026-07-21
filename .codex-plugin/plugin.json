@@ -1,6 +1,6 @@
 {
   "name": "kadenn-skills",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Six focused skills for better reasoning, planning, review, time awareness, and software delivery.",
   "author": {
     "name": "Kagan Demirhindi",
@@ -21,7 +21,7 @@
     "websiteURL": "https://github.com/kadenn/skills",
     "defaultPrompt": [
       "Use Socratic to turn this idea into a decision.",
-      "Run a Full Review of the current diff.",
+      "Run a Senior Review of the current diff.",
       "Use Shipit to prepare this change for a PR."
     ]
   }
