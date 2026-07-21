@@ -11,8 +11,8 @@
         "source": "github",
         "repo": "kadenn/skills"
       },
-      "description": "Six practical skills for thinking and software delivery",
-      "version": "0.2.0",
+      "description": "Seven practical skills for thinking and software delivery",
+      "version": "0.3.0",
       "author": {
         "name": "Kagan Demirhindi"
       },

@@ -11,7 +11,15 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ("timescale", "socratic", "pushback", "chronos", "shipit", "senior-review")
+SKILLS = (
+    "timescale",
+    "socratic",
+    "pushback",
+    "chronos",
+    "shipit",
+    "senior-review",
+    "agent-fix-loop",
+)
 FRONTMATTER_KEYS = {"name", "description"}
 FORBIDDEN_TEXT = ("\u2013", "\u2014", "USER/", "[TODO", "not published yet", "scaffold")
 TURKISH_SPECIFIC = set("çğıöşüÇĞİÖŞÜ")

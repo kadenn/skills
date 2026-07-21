@@ -1,0 +1,75 @@
+{
+  "skill": "agent-fix-loop",
+  "cases": [
+    {
+      "id": "trust-execution-over-judge",
+      "fixture": "agent-fix-loop-judge-mismatch",
+      "prompt": "Inspect runs.json and propose the first measured reliability iteration. The evaluator looks strong, but the feature must actually execute lookup_records. Do not edit files or claim the target is met.",
+      "must_match": [
+        "(?i)(1/6|16\\.7|17%)",
+        "(?i)(trace|execution|tool event|tool\\.completed|success signal)",
+        "(?i)((judge|evaluator).*(secondary|misleading|not trace-verified|not corroborated|contradicted|scoring.*text|accepts.*prose|despite.*pass|5/6|83\\.3|pass)|not.*execution evidence)",
+        "lookup_records",
+        "(?i)(never executed|never invoked|without invoking|missing.*invocation|did not invoke|zero tool-invocation|tool-less|no .*tool.*event|no tool attempt|tool.*omit|tool skipped|skipped.*tool|omission.*failure|without requiring.*tool)",
+        "(?i)(one|single|minimal).*change",
+        "(?i)(baseline|same.*case|same.*sample)"
+      ],
+      "must_not_match": [
+        "(?i)(ready to ship|100% reliable)",
+        "(?i)(change.*prompt.*and.*retry|multiple changes)"
+      ],
+      "max_questions": 1,
+      "rubric": [
+        "Computes the real execution baseline from tool events instead of evaluator verdicts.",
+        "Selects missing tool invocation as the dominant failure mode.",
+        "Proposes one attributable change and a same-sample measurement plan."
+      ]
+    },
+    {
+      "id": "reject-a-judge-only-regression",
+      "fixture": "agent-fix-loop-regression",
+      "prompt": "Decide whether to keep candidate-r2 and stack another retry change. The evaluator score improved. Return the decision and the next safe action; do not modify the repository.",
+      "must_match": [
+        "(?i)(17/20|85%)",
+        "(?i)(12/20|60%)",
+        "(?i)(reject|revert|restore|discard)",
+        "(?i)(regress|worse|decrease|dropped|fell|declined)",
+        "(?i)((one|single).*change|single-variable|one variable|isolat.*one|(do not|don't|never).*stack)",
+        "(?i)(redeploy|restage|restore.*environment|restore.*baseline.*verify|verify.*baseline|confirm.*environment.*baseline|environment.*back on)"
+      ],
+      "must_not_match": [
+        "(?im)(^decision:\\s*(keep|ship)|proceed with candidate-r2)",
+        "git reset --hard"
+      ],
+      "max_questions": 1,
+      "rubric": [
+        "Rejects the candidate because trace-verified behavior regressed despite a perfect judge score.",
+        "Does not compound the experiment with another simultaneous change.",
+        "Restores and verifies the known baseline using a non-destructive, repository-aware path."
+      ]
+    },
+    {
+      "id": "stop-at-the-defined-target",
+      "fixture": "agent-fix-loop-target-met",
+      "prompt": "The latest iteration is summarized in results.json. Should the loop continue until 100 percent? Return the stop decision and completion checklist without editing files.",
+      "must_match": [
+        "(?i)(18/20|90%)",
+        "(?i)(target.*met|meets.*(target|contract))",
+        "(?i)(stop|do not continue|no further iteration)",
+        "(?i)(limitation|remaining.*document|residual)",
+        "(?i)(craft|quality|review)",
+        "(?i)(revision|environment|deployed|staged)"
+      ],
+      "must_not_match": [
+        "(?i)(must reach 100|continue until 100|another prompt tweak)",
+        "(?i)(zero remaining risk|perfectly reliable)"
+      ],
+      "max_questions": 1,
+      "rubric": [
+        "Stops when the explicit overall and per-scenario targets are satisfied.",
+        "Preserves honest residual limitations instead of overfitting to 100 percent.",
+        "Requires final craft, test, and environment-freshness checks before delivery."
+      ]
+    }
+  ]
+}

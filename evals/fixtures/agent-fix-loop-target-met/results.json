@@ -1,0 +1,29 @@
+{
+  "target": {
+    "overall_trace_verified_rate": 0.9,
+    "minimum_successes_per_scenario": 4,
+    "runs_per_scenario": 5
+  },
+  "baseline": {
+    "trace_verified_successes": 14,
+    "total": 20
+  },
+  "latest": {
+    "revision": "candidate-r4",
+    "environment_revision": "candidate-r4",
+    "trace_verified_successes": 18,
+    "total": 20,
+    "scenarios": {
+      "standard": {"successes": 5, "total": 5},
+      "negative_guard": {"successes": 4, "total": 5},
+      "recovery": {"successes": 4, "total": 5},
+      "multi_step": {"successes": 5, "total": 5}
+    },
+    "regressions": [],
+    "remaining_failures": [
+      "one unsupported input shape",
+      "one ambiguous recovery request"
+    ],
+    "unit_tests": "passed"
+  }
+}

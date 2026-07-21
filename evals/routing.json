@@ -12,6 +12,8 @@
     {"id": "shipit-rebase", "prompt": "Rebase this branch safely and prepare it for merge.", "expected": "shipit"},
     {"id": "senior-review-direct", "prompt": "Run a deep architecture-first review of PR 418.", "expected": "senior-review"},
     {"id": "senior-review-diff", "prompt": "Review this diff like a senior engineer and report only high-confidence bugs.", "expected": "senior-review"},
+    {"id": "agent-fix-loop-direct", "prompt": "Run measured fix-test-evaluate iterations until this LLM agent reaches 90 percent trace-verified reliability.", "expected": "agent-fix-loop"},
+    {"id": "agent-fix-loop-judge-mismatch", "prompt": "The evaluator says pass, but traces show the tool never ran. Harden the agent with one measured change at a time.", "expected": "agent-fix-loop"},
     {"id": "none-simple-explanation", "prompt": "Explain what a Python tuple is.", "expected": "none"},
     {"id": "none-weather", "prompt": "What is the weather in London tomorrow?", "expected": "none"},
     {"id": "none-code-change", "prompt": "Add a null check to this local helper and run its unit test.", "expected": "none"},
@@ -19,6 +21,8 @@
     {"id": "confusable-review-estimate", "prompt": "Review whether this estimate includes the deployment window.", "expected": "timescale"},
     {"id": "confusable-ship-review", "prompt": "Before opening the PR, inspect the staged diff for accidental secrets.", "expected": "shipit"},
     {"id": "confusable-pushback-review", "prompt": "Challenge the architecture proposal, not the implementation diff.", "expected": "pushback"},
-    {"id": "confusable-time-estimate", "prompt": "We have a hard deadline at 5pm today. Decide what scope to cut now.", "expected": "chronos"}
+    {"id": "confusable-time-estimate", "prompt": "We have a hard deadline at 5pm today. Decide what scope to cut now.", "expected": "chronos"},
+    {"id": "confusable-loop-estimate", "prompt": "Estimate how long five agent reliability iterations will take, including deployment waits.", "expected": "timescale"},
+    {"id": "confusable-agent-review", "prompt": "Review this agent implementation diff for architecture and security defects, but do not run an iteration loop.", "expected": "senior-review"}
   ]
 }

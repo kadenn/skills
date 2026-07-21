@@ -1,6 +1,6 @@
 # Kadenn Skills
 
-Six portable, tested workflows for AI agents. Each skill follows the open Agent Skills format and can be installed independently. The repository can also be installed as a plugin to enable optional lifecycle hooks.
+Seven portable, tested workflows for AI agents. Each skill follows the open Agent Skills format and can be installed independently. The repository can also be installed as a plugin to enable optional lifecycle hooks.
 
 | Skill | Purpose |
 | --- | --- |
@@ -10,6 +10,7 @@ Six portable, tested workflows for AI agents. Each skill follows the open Agent 
 | `chronos` | Use reliable wall-clock context for deadlines, schedules, and stuck loops. |
 | `shipit` | Move changes through git, commits, pushes, PRs, and merges safely. |
 | `senior-review` | Review architecture first, then report high-confidence implementation defects. |
+| `agent-fix-loop` | Improve agent reliability through trace-verified, attributable iterations. |
 
 ## Install a skill
 
@@ -34,7 +35,7 @@ npx skills add kadenn/skills --skill timescale --agent codex -g -y
 
 ## Install the enhanced plugin
 
-The plugin installs all six skills and enables the hooks described below.
+The plugin installs all seven skills and enables the hooks described below.
 
 Claude Code:
 

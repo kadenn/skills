@@ -22,7 +22,15 @@ CASES_DIR = REPO_ROOT / "evals" / "cases"
 FIXTURES_DIR = REPO_ROOT / "evals" / "fixtures"
 RESULTS_DIR = REPO_ROOT / "evals" / "results"
 SKILLS_DIR = REPO_ROOT / "skills"
-SKILL_NAMES = ("timescale", "socratic", "pushback", "chronos", "shipit", "senior-review")
+SKILL_NAMES = (
+    "timescale",
+    "socratic",
+    "pushback",
+    "chronos",
+    "shipit",
+    "senior-review",
+    "agent-fix-loop",
+)
 
 
 def parse_args() -> argparse.Namespace:

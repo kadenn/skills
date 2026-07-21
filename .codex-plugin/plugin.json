@@ -1,7 +1,7 @@
 {
   "name": "kadenn-skills",
-  "version": "0.2.0",
-  "description": "Six focused skills for better reasoning, planning, review, time awareness, and software delivery.",
+  "version": "0.3.0",
+  "description": "Seven focused skills for reasoning, planning, review, reliability, time awareness, and software delivery.",
   "author": {
     "name": "Kagan Demirhindi",
     "url": "https://github.com/kadenn"
@@ -9,11 +9,11 @@
   "homepage": "https://github.com/kadenn/skills",
   "repository": "https://github.com/kadenn/skills",
   "license": "MIT",
-  "keywords": ["agent-skills", "code-review", "planning", "git", "socratic"],
+  "keywords": ["agent-skills", "agent-reliability", "code-review", "planning", "git", "socratic"],
   "skills": "./skills/",
   "interface": {
     "displayName": "Kadenn Skills",
-    "shortDescription": "Six practical workflows for AI agents",
+    "shortDescription": "Seven practical workflows for AI agents",
     "longDescription": "Portable agent skills with optional lifecycle hooks for time awareness and git safety.",
     "developerName": "Kagan Demirhindi",
     "category": "Productivity",
@@ -22,6 +22,7 @@
     "defaultPrompt": [
       "Use Socratic to turn this idea into a decision.",
       "Run a Senior Review of the current diff.",
+      "Use Agent Fix Loop to harden this agent with trace-verified iterations.",
       "Use Shipit to prepare this change for a PR."
     ]
   }

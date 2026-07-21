@@ -1,0 +1,58 @@
+{
+  "feature": "record lookup agent",
+  "required_mechanism": "lookup_records must complete successfully",
+  "target": {
+    "trace_verified_rate": 0.8
+  },
+  "evaluator_summary": {
+    "passed": 5,
+    "total": 6
+  },
+  "runs": [
+    {
+      "id": "lookup-1",
+      "judge": "pass",
+      "events": [
+        {"type": "model.output", "text": "I looked up the record and found three matches."}
+      ]
+    },
+    {
+      "id": "lookup-2",
+      "judge": "pass",
+      "events": [
+        {"type": "model.output", "text": "The lookup completed successfully."}
+      ]
+    },
+    {
+      "id": "lookup-3",
+      "judge": "pass",
+      "events": [
+        {"type": "tool.started", "name": "lookup_records"},
+        {"type": "tool.completed", "name": "lookup_records", "status": "ok", "result_count": 2},
+        {"type": "model.output", "text": "Two matching records were returned."}
+      ]
+    },
+    {
+      "id": "lookup-4",
+      "judge": "pass",
+      "events": [
+        {"type": "model.output", "text": "No matching record exists."}
+      ]
+    },
+    {
+      "id": "lookup-5",
+      "judge": "fail",
+      "events": [
+        {"type": "tool.started", "name": "lookup_records"},
+        {"type": "tool.failed", "name": "lookup_records", "error_type": "invalid_argument"}
+      ]
+    },
+    {
+      "id": "lookup-6",
+      "judge": "pass",
+      "events": [
+        {"type": "model.output", "text": "I found the requested record."}
+      ]
+    }
+  ]
+}

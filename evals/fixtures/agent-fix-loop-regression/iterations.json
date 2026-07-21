@@ -1,0 +1,27 @@
+{
+  "target": {
+    "overall_trace_verified_rate": 0.85
+  },
+  "baseline": {
+    "revision": "baseline-r1",
+    "judge_passed": 16,
+    "trace_verified_successes": 17,
+    "total": 20,
+    "environment_verified": true
+  },
+  "candidate": {
+    "revision": "candidate-r2",
+    "judge_passed": 20,
+    "trace_verified_successes": 12,
+    "total": 20,
+    "environment_verified": true,
+    "changes": [
+      "broadened the routing prompt",
+      "increased automatic retries"
+    ],
+    "new_failures": {
+      "duplicate_side_effects": 4,
+      "retry_exhaustion": 1
+    }
+  }
+}

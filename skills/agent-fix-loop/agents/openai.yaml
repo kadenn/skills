@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Fix Loop"
+  short_description: "Run trace-verified agent reliability loops"
+  default_prompt: "Use $agent-fix-loop to harden this agent with measured, trace-verified iterations."
