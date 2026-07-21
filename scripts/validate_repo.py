@@ -194,6 +194,55 @@ def validate_manifests() -> list[str]:
     return errors
 
 
+def validate_skill_catalog(payload: Any) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(payload, dict):
+        return ["skills.sh.json: root must be an object"]
+    if payload.get("$schema") != "https://skills.sh/schemas/skills.sh.schema.json":
+        errors.append("skills.sh.json: unexpected schema")
+    if payload.get("notGrouped") not in {"top", "bottom"}:
+        errors.append("skills.sh.json: notGrouped must be top or bottom")
+
+    groupings = payload.get("groupings")
+    if not isinstance(groupings, list) or not groupings:
+        return errors + ["skills.sh.json: groupings must be a non-empty list"]
+
+    catalog_skills: list[str] = []
+    for index, grouping in enumerate(groupings):
+        label = f"skills.sh.json:groupings[{index}]"
+        if not isinstance(grouping, dict):
+            errors.append(f"{label}: must be an object")
+            continue
+        for field in ("title", "description"):
+            if not isinstance(grouping.get(field), str) or not grouping[field].strip():
+                errors.append(f"{label}: missing {field}")
+        names = grouping.get("skills")
+        if (
+            not isinstance(names, list)
+            or not names
+            or not all(isinstance(name, str) for name in names)
+        ):
+            errors.append(f"{label}: skills must be a non-empty string list")
+            continue
+        catalog_skills.extend(names)
+
+    duplicates = sorted({name for name in catalog_skills if catalog_skills.count(name) > 1})
+    if duplicates:
+        errors.append(f"skills.sh.json: duplicate skills {duplicates}")
+    if set(catalog_skills) != set(SKILLS):
+        errors.append(
+            f"skills.sh.json: expected {sorted(SKILLS)}, found {sorted(set(catalog_skills))}"
+        )
+    return errors
+
+
+def validate_catalog() -> list[str]:
+    errors: list[str] = []
+    payload = load_json(ROOT / "skills.sh.json", errors)
+    errors.extend(validate_skill_catalog(payload))
+    return errors
+
+
 def validate_text() -> list[str]:
     errors: list[str] = []
     for path in ROOT.rglob("*"):
@@ -223,6 +272,7 @@ def validate() -> list[str]:
         errors.extend(validate_skill(skill))
     errors.extend(validate_evals())
     errors.extend(validate_manifests())
+    errors.extend(validate_catalog())
     errors.extend(validate_text())
     return errors
 

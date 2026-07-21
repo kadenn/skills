@@ -1,0 +1,31 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Thinking and Decisions",
+      "description": "Skills for developing ideas, challenging assumptions, and reaching defensible decisions.",
+      "skills": [
+        "socratic",
+        "pushback"
+      ]
+    },
+    {
+      "title": "Engineering Quality",
+      "description": "Skills for reviewing implementation quality and improving agent reliability with measured evidence.",
+      "skills": [
+        "senior-review",
+        "agent-fix-loop"
+      ]
+    },
+    {
+      "title": "Delivery and Operations",
+      "description": "Skills for estimating work, using reliable time context, and delivering changes safely.",
+      "skills": [
+        "timescale",
+        "chronos",
+        "shipit"
+      ]
+    }
+  ]
+}

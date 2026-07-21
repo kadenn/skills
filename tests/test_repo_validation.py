@@ -14,6 +14,22 @@ class RepositoryValidationTest(unittest.TestCase):
     def test_repository_contract(self):
         self.assertEqual(VALIDATOR.validate(), [])
 
+    def test_skill_catalog_rejects_duplicate_and_missing_skills(self):
+        payload = {
+            "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+            "notGrouped": "bottom",
+            "groupings": [
+                {
+                    "title": "Example",
+                    "description": "Example grouping.",
+                    "skills": ["socratic", "socratic"],
+                }
+            ],
+        }
+        errors = VALIDATOR.validate_skill_catalog(payload)
+        self.assertTrue(any("duplicate skills" in error for error in errors))
+        self.assertTrue(any("expected" in error for error in errors))
+
 
 if __name__ == "__main__":
     unittest.main()
