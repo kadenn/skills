@@ -8,6 +8,7 @@
     {"id": "pushback-premortem", "prompt": "Run a pre-mortem and tell me which assumption is most likely to cause rework.", "expected": "pushback"},
     {"id": "chronos-deadline", "prompt": "The deploy window closes in 25 minutes. Re-plan the remaining work.", "expected": "chronos"},
     {"id": "chronos-loop", "prompt": "We have repeated the same failing command for 20 minutes. Help us break the loop.", "expected": "chronos"},
+    {"id": "chronos-long-loop", "prompt": "This coding session has spent three hours editing the same parser and rerunning the same failed checks. Tell me when to stop the tactic and change approach.", "expected": "chronos"},
     {"id": "shipit-pr", "prompt": "Commit these changes, push the branch, and open a pull request.", "expected": "shipit"},
     {"id": "shipit-rebase", "prompt": "Rebase this branch safely and prepare it for merge.", "expected": "shipit"},
     {"id": "senior-review-direct", "prompt": "Run a deep architecture-first review of PR 418.", "expected": "senior-review"},

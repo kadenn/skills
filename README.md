@@ -57,7 +57,7 @@ Plugin hooks require an explicit trust review before they run.
 
 Every skill works from `SKILL.md` alone. Installing the plugin adds two verified enhancements:
 
-- `chronos` injects a compact local timestamp and tracks repeated tool actions without storing prompt or tool-output content.
+- `chronos` injects compact time context only when timing matters, a return gap is meaningful, or repeated tool actions indicate a stuck loop. It checks the current prompt transiently but does not store prompt or tool-output content.
 - `shipit` inspects staged content before agent-issued `git commit` commands and blocks likely secrets as a defense-in-depth guardrail.
 
 `pushback` intentionally does not scrape cross-project memory. It uses conversation context, repository evidence, and memory that the host already exposes. This avoids silently moving unrelated project content into a session.
@@ -72,13 +72,19 @@ Optional hook configuration lives at `$XDG_CONFIG_HOME/kadenn-skills/config.json
     "enabled": true,
     "mode": "default",
     "timezone": "Europe/London",
-    "trackRepetition": true
+    "trackRepetition": true,
+    "returnGapMinutes": 30,
+    "focusMinutes": 60,
+    "longLoopMinutes": 120,
+    "stuckAlertCooldownMinutes": 30
   },
   "shipit": {
     "secretScan": true
   }
 }
 ```
+
+Chronos modes are `default` for event-driven context, `minimal` for explicit compact clock context, `always` for every prompt, `strict` for user-defined schedule enforcement, and `off`. `/chronos on` is an alias for `always`.
 
 ## Quality gates
 

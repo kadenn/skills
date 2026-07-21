@@ -8,7 +8,18 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 
 const DEFAULT_CONFIG = Object.freeze({
-  chronos: { enabled: true, mode: 'default', timezone: null, trackRepetition: true },
+  chronos: {
+    enabled: true,
+    mode: 'default',
+    timezone: null,
+    trackRepetition: true,
+    returnGapMinutes: 30,
+    focusMinutes: 60,
+    stuckWindowMinutes: 15,
+    longLoopMinutes: 120,
+    historyMinutes: 360,
+    stuckAlertCooldownMinutes: 30,
+  },
   shipit: { secretScan: true },
 });
 
@@ -95,6 +106,8 @@ function newState(now = Date.now()) {
     startedAt: now,
     lastPromptAt: null,
     chronosMode: null,
+    timeFocusUntil: null,
+    lastStuckAlertAt: null,
     recentTools: [],
   };
 }
@@ -153,28 +166,51 @@ function localStamp(timezone, now = new Date()) {
 }
 
 function parseChronosMode(prompt) {
-  const match = String(prompt || '').match(/^\/(?:kadenn-skills:)?chronos(?:\s+(on|off|default|minimal|strict))?\b/i);
+  const match = String(prompt || '').match(/^\/(?:kadenn-skills:)?chronos(?:\s+(on|off|default|minimal|strict|always))?\b/i);
   if (!match) return null;
   const mode = (match[1] || 'default').toLowerCase();
-  return mode === 'on' ? 'default' : mode;
+  return mode === 'on' ? 'always' : mode;
 }
 
-function findStuckSignal(recentTools, now = Date.now()) {
-  const windowStart = now - (15 * 60 * 1000);
+function isTimeRelevantPrompt(prompt) {
+  const text = String(prompt || '');
+  const clockTerms = /\b(?:deadline|due date|schedule|scheduled|appointment|meeting|demo|launch|deploy window|today|tomorrow|tonight|timezone|elapsed|duration|eta|time remaining|time left|how long|what time|ago|hours?|minutes?|days?|weeks?|bug\u00fcn|yar\u0131n|saat|dakika|hafta|zaman|takvim|toplant\u0131|randevu)\b/i;
+  const turkishDuration = /\bne\s+kadar\s+s(?:u|\u00fc)rer\b/i;
+  return clockTerms.test(text) || turkishDuration.test(text);
+}
+
+function findStuckSignal(recentTools, now = Date.now(), config = {}) {
+  const stuckWindowMinutes = config.stuckWindowMinutes ?? 15;
+  const longLoopMinutes = config.longLoopMinutes ?? 120;
+  const windowStart = now - (stuckWindowMinutes * 60 * 1000);
   const groups = new Map();
   for (const entry of recentTools || []) {
-    if (!entry || entry.at < windowStart) continue;
+    if (!entry) continue;
     const list = groups.get(entry.signature) || [];
     list.push(entry);
     groups.set(entry.signature, list);
   }
   let best = null;
-  for (const entries of groups.values()) {
+  for (const unsorted of groups.values()) {
+    const entries = [...unsorted].sort((left, right) => left.at - right.at);
+    const recent = entries.filter((entry) => entry.at >= windowStart);
+    const recentFailures = recent.filter((entry) => entry.failed).length;
+    const immediateEditLoop = recent[0]?.kind === 'edit' && recent.length >= 4;
+    const immediateFailureLoop = recentFailures >= 3;
+
     const failures = entries.filter((entry) => entry.failed).length;
-    const editLoop = entries[0]?.kind === 'edit' && entries.length >= 4;
-    const failureLoop = failures >= 3;
-    if (!editLoop && !failureLoop) continue;
-    if (!best || entries.length > best.entries.length) best = { entries, failures };
+    const span = entries.length ? entries.at(-1).at - entries[0].at : 0;
+    const longEnough = span >= longLoopMinutes * 60 * 1000;
+    const longEditLoop = entries[0]?.kind === 'edit' && entries.length >= 6 && longEnough;
+    const longFailureLoop = failures >= 2 && entries.length >= 6 && longEnough;
+
+    let candidate = null;
+    if (immediateEditLoop || immediateFailureLoop) {
+      candidate = { entries: recent, failures: recentFailures };
+    } else if (longEditLoop || longFailureLoop) {
+      candidate = { entries, failures };
+    }
+    if (candidate && (!best || candidate.entries.length > best.entries.length)) best = candidate;
   }
   if (!best) return null;
   const first = best.entries[0];
@@ -183,16 +219,45 @@ function findStuckSignal(recentTools, now = Date.now()) {
   return `${first.label} repeated ${best.entries.length}x in ${elapsed}${suffix}`;
 }
 
+function chronosTrigger(state, config, prompt, requestedMode = null, now = Date.now()) {
+  const mode = requestedMode || state.chronosMode || config.mode || 'default';
+  if (mode === 'off') return null;
+  if (requestedMode) return 'mode-change';
+  if (mode === 'always') return 'always';
+  if (isTimeRelevantPrompt(prompt)) return 'time-prompt';
+  if (mode === 'minimal') return null;
+  if (state.timeFocusUntil && state.timeFocusUntil > now) return 'time-focus';
+  const returnGapMinutes = config.returnGapMinutes ?? 30;
+  if (state.lastPromptAt && now - state.lastPromptAt >= returnGapMinutes * 60 * 1000) {
+    return 'return-gap';
+  }
+  if (config.trackRepetition) {
+    const signal = findStuckSignal(state.recentTools, now, config);
+    const cooldown = config.stuckAlertCooldownMinutes ?? 30;
+    if (shouldEmitStuckAlert(state, signal, now, cooldown)) return 'stuck-signal';
+  }
+  return null;
+}
+
+function shouldEmitStuckAlert(state, signal, now = Date.now(), cooldownMinutes = 30) {
+  if (!signal) return false;
+  if (!state.lastStuckAlertAt) return true;
+  return now - state.lastStuckAlertAt >= cooldownMinutes * 60 * 1000;
+}
+
 function buildChronosBlock(state, config, nowMs = Date.now()) {
   const now = new Date(nowMs);
   const { stamp, timezone } = localStamp(config.timezone, now);
   const mode = state.chronosMode || config.mode || 'default';
-  const parts = [stamp, `session +${formatMinutes(nowMs - state.startedAt)}`];
-  if (state.lastPromptAt) parts.push(`last msg +${formatMinutes(nowMs - state.lastPromptAt)}`);
+  const parts = [stamp];
+  if (mode !== 'minimal') {
+    parts.push(`session +${formatMinutes(nowMs - state.startedAt)}`);
+    if (state.lastPromptAt) parts.push(`last msg +${formatMinutes(nowMs - state.lastPromptAt)}`);
+  }
   parts.push(`tz ${timezone}`);
   if (mode !== 'default') parts.push(`mode ${mode}`);
   if (mode !== 'minimal' && config.trackRepetition) {
-    const signal = findStuckSignal(state.recentTools, nowMs);
+    const signal = findStuckSignal(state.recentTools, nowMs, config);
     if (signal) parts.push(`stuck-signal ${signal}`);
   }
   return `[chronos: ${parts.join(' | ')}]`;
@@ -329,7 +394,8 @@ function handleSessionStart(input) {
 function handleUserPrompt(input, config, now = Date.now()) {
   if (!config.chronos.enabled) return;
   const state = readState(input.session_id) || newState(now);
-  const requestedMode = parseChronosMode(input.prompt || input.user_prompt);
+  const prompt = input.prompt || input.user_prompt || '';
+  const requestedMode = parseChronosMode(prompt);
   if (requestedMode) state.chronosMode = requestedMode;
   const mode = state.chronosMode || config.chronos.mode || 'default';
   if (mode === 'off') {
@@ -338,19 +404,37 @@ function handleUserPrompt(input, config, now = Date.now()) {
     if (requestedMode) emitContext('UserPromptSubmit', '<chronos>disabled for this session</chronos>');
     return;
   }
-  const block = buildChronosBlock(state, config.chronos, now);
+  const trigger = chronosTrigger(state, config.chronos, prompt, requestedMode, now);
+  if (isTimeRelevantPrompt(prompt)) {
+    const focusMinutes = config.chronos.focusMinutes ?? 60;
+    state.timeFocusUntil = now + focusMinutes * 60 * 1000;
+  }
+  if (trigger === 'stuck-signal') state.lastStuckAlertAt = now;
+  const block = trigger ? buildChronosBlock(state, config.chronos, now) : null;
   state.lastPromptAt = now;
   writeState(input.session_id, state);
-  emitContext('UserPromptSubmit', block);
+  if (block) emitContext('UserPromptSubmit', block);
 }
 
 function handlePostTool(input, config, now = Date.now()) {
   if (!config.chronos.enabled || !config.chronos.trackRepetition) return;
   const state = readState(input.session_id) || newState(now);
+  const mode = state.chronosMode || config.chronos.mode || 'default';
+  if (mode === 'off' || mode === 'minimal') return;
+  const longLoopMinutes = config.chronos.longLoopMinutes ?? 120;
+  const historyMinutes = Math.max(
+    config.chronos.historyMinutes ?? 360,
+    longLoopMinutes + 60,
+  );
   state.recentTools = [...(state.recentTools || []), toolRecord(input, now)]
-    .filter((entry) => entry.at >= now - (2 * 60 * 60 * 1000))
-    .slice(-50);
+    .filter((entry) => entry.at >= now - (historyMinutes * 60 * 1000))
+    .slice(-100);
+  const signal = findStuckSignal(state.recentTools, now, config.chronos);
+  const cooldown = config.chronos.stuckAlertCooldownMinutes ?? 30;
+  const alert = shouldEmitStuckAlert(state, signal, now, cooldown);
+  if (alert) state.lastStuckAlertAt = now;
   writeState(input.session_id, state);
+  if (alert) emitContext('PostToolUse', buildChronosBlock(state, config.chronos, now));
 }
 
 function handlePreTool(input, config) {
@@ -395,6 +479,7 @@ module.exports = {
   DEFAULT_CONFIG,
   SECRET_PATTERNS,
   buildChronosBlock,
+  chronosTrigger,
   commitIncludesTrackedChanges,
   commitUsesShellCd,
   deniedFilename,
@@ -402,12 +487,14 @@ module.exports = {
   formatDeny,
   formatMinutes,
   gitCwd,
+  isTimeRelevantPrompt,
   isGitCommitCommand,
   localStamp,
   parseChronosMode,
   safeCommandLabel,
   scanCommit,
   scanPatch,
+  shouldEmitStuckAlert,
   toolRecord,
   uniqueFindings,
 };

@@ -24,7 +24,7 @@
       "must_match": [
         "(?i)(stop|change|different)",
         "(?i)(UTF-8|encoding|assumption)",
-        "(?i)(inspect|capture|minimal|bytes|fixture)"
+        "(?i)(inspect|capture|minimal|bytes|fixture|check.*input|validat.*encoding)"
       ],
       "must_not_match": ["(?i)(try the same test again|one more identical)"],
       "max_questions": 1,
@@ -32,6 +32,23 @@
         "Uses both repetition and elapsed time as evidence of a loop.",
         "Challenges the shared UTF-8 assumption.",
         "Proposes a materially different diagnostic test."
+      ]
+    },
+    {
+      "id": "reassess-a-long-running-loop",
+      "prompt": "This session has spent three hours editing the same parser and running the same two failing checks. The last six attempts all assumed the tokenizer is correct. Decide whether to continue and give the next action.",
+      "must_match": [
+        "(?i)(three hours|3 hours|long-running)",
+        "(?i)(stop|reassess|change|different|do not continue)",
+        "(?i)(tokenizer|assumption)",
+        "(?i)(isolate|inspect|trace|fixture|minimal|capture|dump|log|print|token stream)"
+      ],
+      "must_not_match": ["(?i)(keep trying the same|another identical attempt)"],
+      "max_questions": 1,
+      "rubric": [
+        "Treats elapsed time plus repeated evidence as a reason to stop the current tactic.",
+        "Identifies the shared tokenizer assumption instead of blaming time alone.",
+        "Chooses a materially different diagnostic action."
       ]
     },
     {

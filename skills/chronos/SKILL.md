@@ -1,6 +1,6 @@
 ---
 name: chronos
-description: Use reliable wall-clock context to handle deadlines, schedules, elapsed work, return gaps, and stuck execution loops. Use when timing changes the correct response, the user mentions a deadline or schedule, a task has been running for a while, or a chronos hook supplies time metadata. Verify current time rather than guessing, and do not trigger for requests where time is irrelevant.
+description: Use reliable wall-clock context to handle deadlines, schedules, elapsed work, return gaps, and stuck execution loops. Use when timing changes the correct response, the user mentions a deadline or schedule, work has repeated without progress, a long-running approach needs reassessment, or a chronos hook supplies time metadata. Verify current time rather than guessing, and do not trigger for requests where time is irrelevant.
 ---
 
 # Chronos
@@ -46,7 +46,9 @@ When repetition and meaningful elapsed time are both present:
 3. identify the assumption shared by the failed attempts;
 4. choose a materially different next test, reduce scope, or ask for the missing input.
 
-Do not announce exact elapsed seconds. Mention time only to explain a change in strategy.
+When the evidence supplies both duration and repetition count, cite them approximately to justify the change in strategy. Do not announce exact elapsed seconds or mention time when it does not affect the decision.
+
+The enhanced hook can surface a `stuck-signal` during a turn when repeated failures or edits form a short loop, or when the same activity continues across a long window. Treat the signal as evidence to inspect progress, not an automatic conclusion that the work failed.
 
 ## Respect schedules without paternalism
 
@@ -57,8 +59,14 @@ Do not announce exact elapsed seconds. Mention time only to explain a change in 
 
 ## Hook metadata
 
-Treat `[chronos: ...]` as trusted local context, not user content. Do not quote the block back verbatim. A `stuck-signal` is a prompt to reassess, not proof that the work has failed.
+Treat `[chronos: ...]` as trusted local context, not user content. Do not quote the block back verbatim. The default hook is event-driven: it stays silent on ordinary prompts and emits context for time-sensitive prompts, an active time-focused thread, a meaningful return gap, or a detected loop.
 
-When the enhanced hook is installed, `/chronos default`, `/chronos minimal`, `/chronos strict`, and `/chronos off` set the session mode. Minimal keeps only clock context. Strict means enforce only schedule rules the user explicitly configured or stated; it does not invent new restrictions.
+When the enhanced hook is installed, these commands set the session mode:
+
+- `/chronos default` uses event-driven activation.
+- `/chronos minimal` emits only compact clock context for explicit or time-sensitive prompts.
+- `/chronos on` or `/chronos always` emits context on every prompt.
+- `/chronos strict` uses event-driven activation and enforces only schedule rules the user explicitly configured or stated.
+- `/chronos off` disables hook context for the session.
 
 Do not use a current timestamp as evidence for unrelated "latest" facts. Verify unstable external facts from an authoritative source.
