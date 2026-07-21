@@ -1,0 +1,25 @@
+diff --git a/app/export.py b/app/export.py
+new file mode 100644
+index 0000000..38339cd
+--- /dev/null
++++ b/app/export.py
+@@ -0,0 +1,8 @@
++def build_export_params(overrides: dict) -> dict:
++    params = dict(overrides)
++    params.setdefault("redact_pii", True)
++    return params
++
++
++def export_customers(exporter, overrides: dict):
++    return exporter.run(build_export_params(overrides))
+diff --git a/app/test_export.py b/app/test_export.py
+new file mode 100644
+index 0000000..ac9449d
+--- /dev/null
++++ b/app/test_export.py
+@@ -0,0 +1,5 @@
++from app.export import build_export_params
++
++
++def test_redacts_by_default():
++    assert build_export_params({})["redact_pii"] is True

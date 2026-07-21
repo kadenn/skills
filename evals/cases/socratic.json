@@ -1,0 +1,51 @@
+{
+  "skill": "socratic",
+  "cases": [
+    {
+      "id": "learn-one-focused-question",
+      "prompt": "/learn I think idempotency means retrying the same request always returns the same response. Help me understand whether that model is correct.",
+      "must_match": ["\\?"],
+      "must_not_match": ["(?i)(here are ten|step 1.*step 2.*step 3)"],
+      "max_questions": 1,
+      "max_words": 180,
+      "rubric": [
+        "Targets the difference between stable effects and identical responses.",
+        "Asks one question rather than delivering a long lecture.",
+        "Uses the user's stated model as the starting point."
+      ]
+    },
+    {
+      "id": "produce-without-ceremony",
+      "prompt": "/produce Write a concise incident update for customers. Facts: checkout errors lasted 18 minutes, service is restored, no orders were lost, and we are monitoring. Do not ask follow-up questions.",
+      "must_match": [
+        "(?i)(18 minutes)",
+        "(?i)(restored|resolved)",
+        "(?i)(no orders were lost)",
+        "(?i)monitor"
+      ],
+      "max_questions": 0,
+      "max_words": 180,
+      "rubric": [
+        "Produces the customer-ready update immediately.",
+        "Does not reopen settled facts or add unsupported root-cause claims.",
+        "Keeps the tone concise and clear."
+      ]
+    },
+    {
+      "id": "preserve-learned-constraints",
+      "prompt": "We finished the learning phase. We established that the migration must be reversible, can pause between batches, and cannot lock the table for more than 30 seconds. Switch to PRODUCE and draft the execution checklist now.",
+      "must_match": [
+        "(?i)(revers|rollback)",
+        "(?i)(batch|pause)",
+        "(?i)(30 seconds|30-second|30s)",
+        "(?i)(checklist|preflight|verify)"
+      ],
+      "max_questions": 1,
+      "rubric": [
+        "Carries all learned constraints into the artifact.",
+        "Names the transition once and continues without restarting discovery.",
+        "Includes verification and stop conditions."
+      ]
+    }
+  ]
+}

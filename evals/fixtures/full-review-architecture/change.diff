@@ -1,0 +1,14 @@
+diff --git a/src/order_cache.py b/src/order_cache.py
+index 1ec4a11..c8c8bb2 100644
+--- a/src/order_cache.py
++++ b/src/order_cache.py
+@@ -4,2 +4,9 @@
++def _order_key(order_id: str) -> str:
++    if not order_id:
++        raise ValueError("order_id is required")
++    return f"order:{order_id}"
++
++
+ def read_order(cache, order_id: str):
+-    return cache.get(cache_key("order", order_id))
++    return cache.get(_order_key(order_id))

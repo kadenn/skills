@@ -1,0 +1,83 @@
+diff --git a/app/pagination.py b/app/pagination.py
+new file mode 100644
+index 0000000..bc20186
+--- /dev/null
++++ b/app/pagination.py
+@@ -0,0 +1,6 @@
++def next_cursor(items: list[dict], has_more: bool) -> str | None:
++    if not has_more:
++        return None
++    if not items:
++        raise ValueError("has_more requires at least one item")
++    return str(items[-1]["id"])
+diff --git a/app/test_pagination.py b/app/test_pagination.py
+new file mode 100644
+index 0000000..be0efb6
+--- /dev/null
++++ b/app/test_pagination.py
+@@ -0,0 +1,22 @@
++from app.pagination import next_cursor
++
++
++def test_empty_page_has_no_cursor():
++    assert next_cursor([], has_more=False) is None
++
++
++def test_uses_last_item_id():
++    assert next_cursor([{"id": 10}, {"id": 11}], has_more=True) == "11"
++
++
++def test_non_empty_final_page_has_no_cursor():
++    assert next_cursor([{"id": 10}], has_more=False) is None
++
++
++def test_has_more_requires_an_item():
++    try:
++        next_cursor([], has_more=True)
++    except ValueError as error:
++        assert str(error) == "has_more requires at least one item"
++    else:
++        raise AssertionError("expected ValueError")
+diff --git a/app/orders.py b/app/orders.py
+index 1111111..2222222 100644
+--- a/app/orders.py
++++ b/app/orders.py
+@@ -1,2 +1,5 @@
++from app.pagination import next_cursor
++
++
++def page_response(items: list[dict], has_more: bool) -> dict:
++    return {"items": items, "next_cursor": next_cursor(items, has_more)}
+diff --git a/app/test_orders.py b/app/test_orders.py
+index 3333333..4444444 100644
+--- a/app/test_orders.py
++++ b/app/test_orders.py
+@@ -1,2 +1,29 @@
++from app.orders import page_response
++
++
++def test_page_response_includes_cursor():
++    assert page_response([{"id": 10}, {"id": 11}], has_more=True) == {
++        "items": [{"id": 10}, {"id": 11}],
++        "next_cursor": "11",
++    }
++
++
++def test_empty_page_response_has_no_cursor():
++    assert page_response([], has_more=False) == {"items": [], "next_cursor": None}
++
++
++def test_final_page_response_has_no_cursor():
++    assert page_response([{"id": 10}], has_more=False) == {
++        "items": [{"id": 10}],
++        "next_cursor": None,
++    }
++
++
++def test_page_response_rejects_inconsistent_pagination_state():
++    try:
++        page_response([], has_more=True)
++    except ValueError as error:
++        assert str(error) == "has_more requires at least one item"
++    else:
++        raise AssertionError("expected ValueError")

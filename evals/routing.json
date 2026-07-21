@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {"id": "timescale-direct", "prompt": "How long will this API migration take with an AI coding agent?", "expected": "timescale"},
+    {"id": "timescale-critical-path", "prompt": "Separate active engineering effort from approval and deployment wait time.", "expected": "timescale"},
+    {"id": "socratic-learn", "prompt": "/learn Help me understand why distributed locks fail under partitions.", "expected": "socratic"},
+    {"id": "socratic-produce", "prompt": "/produce Turn these settled decisions into a one-page proposal.", "expected": "socratic"},
+    {"id": "pushback-direct", "prompt": "Push back on this database migration plan before we implement it.", "expected": "pushback"},
+    {"id": "pushback-premortem", "prompt": "Run a pre-mortem and tell me which assumption is most likely to cause rework.", "expected": "pushback"},
+    {"id": "chronos-deadline", "prompt": "The deploy window closes in 25 minutes. Re-plan the remaining work.", "expected": "chronos"},
+    {"id": "chronos-loop", "prompt": "We have repeated the same failing command for 20 minutes. Help us break the loop.", "expected": "chronos"},
+    {"id": "shipit-pr", "prompt": "Commit these changes, push the branch, and open a pull request.", "expected": "shipit"},
+    {"id": "shipit-rebase", "prompt": "Rebase this branch safely and prepare it for merge.", "expected": "shipit"},
+    {"id": "full-review-direct", "prompt": "Run a deep architecture-first review of PR 418.", "expected": "full-review"},
+    {"id": "full-review-diff", "prompt": "Review this diff like a senior engineer and report only high-confidence bugs.", "expected": "full-review"},
+    {"id": "none-simple-explanation", "prompt": "Explain what a Python tuple is.", "expected": "none"},
+    {"id": "none-weather", "prompt": "What is the weather in London tomorrow?", "expected": "none"},
+    {"id": "none-code-change", "prompt": "Add a null check to this local helper and run its unit test.", "expected": "none"},
+    {"id": "none-read", "prompt": "Show me where the billing route is registered.", "expected": "none"},
+    {"id": "confusable-review-estimate", "prompt": "Review whether this estimate includes the deployment window.", "expected": "timescale"},
+    {"id": "confusable-ship-review", "prompt": "Before opening the PR, inspect the staged diff for accidental secrets.", "expected": "shipit"},
+    {"id": "confusable-pushback-review", "prompt": "Challenge the architecture proposal, not the implementation diff.", "expected": "pushback"},
+    {"id": "confusable-time-estimate", "prompt": "We have a hard deadline at 5pm today. Decide what scope to cut now.", "expected": "chronos"}
+  ]
+}

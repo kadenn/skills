@@ -1,0 +1,4 @@
+interface:
+  display_name: "Shipit"
+  short_description: "Move changes through git and PRs safely"
+  default_prompt: "Use $shipit to prepare and deliver these changes safely."

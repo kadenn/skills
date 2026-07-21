@@ -1,0 +1,4 @@
+interface:
+  display_name: "Full Review"
+  short_description: "Run an architecture-first high-signal review"
+  default_prompt: "Use $full-review to review this change for design and implementation risks."

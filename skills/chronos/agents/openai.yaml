@@ -1,0 +1,4 @@
+interface:
+  display_name: "Chronos"
+  short_description: "Use wall-clock context when timing matters"
+  default_prompt: "Use $chronos to adjust this plan for the actual time and deadline."

@@ -1,0 +1,26 @@
+{
+  "name": "kadenn-skills",
+  "owner": {
+    "name": "Kagan Demirhindi"
+  },
+  "description": "Portable skills and optional lifecycle hooks for AI coding agents.",
+  "plugins": [
+    {
+      "name": "kadenn-skills",
+      "source": {
+        "source": "github",
+        "repo": "kadenn/skills"
+      },
+      "description": "Six practical skills for thinking and software delivery",
+      "version": "0.1.0",
+      "author": {
+        "name": "Kagan Demirhindi"
+      },
+      "homepage": "https://github.com/kadenn/skills",
+      "repository": "https://github.com/kadenn/skills",
+      "license": "MIT",
+      "category": "development",
+      "tags": ["skills", "review", "planning", "git"]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+On branch feature/add-export
+Changes to be committed:
+  modified: src/config.js
+  modified: src/export.js
+
+Untracked files:
+  notes-local.txt

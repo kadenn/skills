@@ -1,0 +1,12 @@
+{
+  "name": "kadenn-skills",
+  "description": "Six focused skills for better reasoning, planning, review, time awareness, and software delivery.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Kagan Demirhindi"
+  },
+  "homepage": "https://github.com/kadenn/skills",
+  "repository": "https://github.com/kadenn/skills",
+  "license": "MIT",
+  "keywords": ["agent-skills", "code-review", "planning", "git", "socratic"]
+}

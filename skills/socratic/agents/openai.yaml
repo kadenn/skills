@@ -1,0 +1,4 @@
+interface:
+  display_name: "Socratic"
+  short_description: "Learn deeply or turn thinking into output"
+  default_prompt: "Use $socratic to help me think this through and produce the right result."

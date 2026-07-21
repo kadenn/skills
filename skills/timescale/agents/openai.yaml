@@ -1,0 +1,4 @@
+interface:
+  display_name: "Timescale"
+  short_description: "Estimate AI-assisted delivery from evidence"
+  default_prompt: "Use $timescale to estimate this work from its real critical path."

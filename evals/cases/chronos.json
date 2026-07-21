@@ -1,0 +1,50 @@
+{
+  "skill": "chronos",
+  "cases": [
+    {
+      "id": "deadline-triage",
+      "prompt": "Current local time is 14:40. The demo starts at 15:00. I still need to fix a broken login redirect, rewrite the settings page CSS, and prepare a smoke test. Give me the execution plan.",
+      "must_match": [
+        "(?i)(20 minutes|14:40|15:00)",
+        "(?i)(login redirect)",
+        "(?i)(smoke test|verify)",
+        "(?i)(defer|skip|after the demo|CSS)"
+      ],
+      "must_not_match": ["(?i)(complete all three in full|plenty of time)"],
+      "max_questions": 1,
+      "rubric": [
+        "Uses the actual remaining window to cut optional CSS work.",
+        "Protects a minimal verification step instead of spending all time coding.",
+        "Defines a checkpoint or fallback before the demo."
+      ]
+    },
+    {
+      "id": "break-a-timed-loop",
+      "prompt": "We have spent 18 minutes editing the same parser and running the same failing test four times. Each attempt assumes the input is valid UTF-8. What should we do next?",
+      "must_match": [
+        "(?i)(stop|change|different)",
+        "(?i)(UTF-8|encoding|assumption)",
+        "(?i)(inspect|capture|minimal|bytes|fixture)"
+      ],
+      "must_not_match": ["(?i)(try the same test again|one more identical)"],
+      "max_questions": 1,
+      "rubric": [
+        "Uses both repetition and elapsed time as evidence of a loop.",
+        "Challenges the shared UTF-8 assumption.",
+        "Proposes a materially different diagnostic test."
+      ]
+    },
+    {
+      "id": "ignore-irrelevant-clock",
+      "prompt": "The current time is 23:58. Explain the difference between a stack and a queue in two sentences. I have not set any schedule or bedtime preference.",
+      "must_match": ["(?i)(stack)", "(?i)(queue)", "(?i)(LIFO|last.*first)", "(?i)(FIFO|first.*first)"],
+      "must_not_match": ["(?i)(sleep|bedtime|tomorrow|too late)"],
+      "max_questions": 0,
+      "max_words": 100,
+      "rubric": [
+        "Answers the concept directly because the clock does not change the task.",
+        "Does not invent a schedule preference or paternalistic reminder."
+      ]
+    }
+  ]
+}

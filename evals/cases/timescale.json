@@ -1,0 +1,57 @@
+{
+  "skill": "timescale",
+  "cases": [
+    {
+      "id": "separate-effort-from-elapsed",
+      "prompt": "Estimate this delivery: add an existing-style REST endpoint, expose it in one React screen, add focused tests, and deploy through a release window that opens tomorrow at 14:00. The repository patterns are established and the implementation work looks bounded. Give me a forecast I can use with the product manager.",
+      "must_match": [
+        "(?i)(likely elapsed|elapsed range|end-to-end|production delivery|code-complete.*release-ready|calendar time)",
+        "(?i)(agent-active|active work|active execution)",
+        "(?i)(human involvement|human review|approval)",
+        "(?i)(external wait|release window)",
+        "(?i)confidence"
+      ],
+      "must_not_match": ["(?i)person-weeks?"],
+      "max_questions": 1,
+      "rubric": [
+        "Separates active implementation time from the release-window delay.",
+        "Uses a narrow range because the repository pattern is established.",
+        "Includes validation and review rather than estimating code generation only."
+      ]
+    },
+    {
+      "id": "external-dependency-dominates",
+      "prompt": "How long will a customer-data migration take? Coding and dry-run tooling should take about a day, but security approval takes 2 to 5 business days, the customer must approve a maintenance window, and the backfill itself runs for 6 hours. Separate effort from calendar time and identify the critical path.",
+      "must_match": [
+        "(?i)(critical path)",
+        "(?i)(2|two).*(5|five).*(business days|days)",
+        "(?i)(external wait|approval|maintenance window)",
+        "(?i)(active work|agent-active)"
+      ],
+      "must_not_match": ["(?i)(one day total|same day delivery)"],
+      "max_questions": 1,
+      "rubric": [
+        "Makes security and customer approval the dominant elapsed-time uncertainty.",
+        "Does not hide the six-hour backfill inside active coding effort.",
+        "Provides a re-estimation checkpoint after approvals or the dry run."
+      ]
+    },
+    {
+      "id": "proof-slice-before-precision",
+      "prompt": "Estimate integrating an undocumented vendor export API into our data pipeline. We do not yet have credentials, do not know its pagination behavior, and have never processed its largest customer dataset. I need a number today.",
+      "must_match": [
+        "(?i)(low confidence|confidence.*low)",
+        "(?i)(proof slice|spike|calibration step|smallest.*test)",
+        "(?i)(credentials|pagination|dataset)",
+        "(?i)(range|scenario)"
+      ],
+      "must_not_match": ["(?i)(guaranteed|definitely complete|exactly [0-9]+ hours)"] ,
+      "max_questions": 1,
+      "rubric": [
+        "Refuses false precision without refusing to provide a planning range.",
+        "Proposes the cheapest credentialed proof that tests pagination and representative volume.",
+        "Names the assumptions that could materially move the estimate."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Pushback"
+  short_description: "Challenge costly gaps without blocking progress"
+  default_prompt: "Use $pushback to challenge this plan before I commit to it."
