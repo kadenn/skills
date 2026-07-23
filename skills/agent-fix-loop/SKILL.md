@@ -35,13 +35,15 @@ Read [measurement.md](references/measurement.md) when defining signals, building
 
 1. Select the largest real failure mode from the baseline.
 2. Inspect several failing traces and the relevant code path. State one falsifiable root-cause hypothesis.
-3. Make one coherent, minimal change. Do not combine prompt, schema, retry, routing, and model changes in the same measurement.
+3. Make one coherent, minimal change to the mechanism that produces the target behavior. Do not count an evaluator, reporting, or acceptance-only gate as a feature fix unless detection itself is the contract. Do not combine prompt, schema, retry, routing, and model changes in the same measurement.
 4. Run deterministic tests at the changed boundary.
 5. Create a reversible checkpoint only when authorized and appropriate for the repository.
 6. Stage or deploy to an isolated test environment when required and authorized. Verify that the tested environment runs the exact candidate revision.
 7. Run the same E2E sample and repetitions as the baseline. Record raw run identifiers and environmental failures.
 8. Reclassify outcomes using the execution-level signal, then compare overall and per-scenario results.
 9. Keep the change only if the evidence improves and no material regression exceeds the agreed budget.
+
+If missing source, authorization, or environment access blocks implementation, stop before the mutation but still finish the proposed iteration with an explicit same-sample remeasurement plan and keep-or-revert condition.
 
 For a long external run, record the loop state before yielding. Use the host's wait or monitoring mechanism instead of repeatedly polling or starting unrelated changes.
 

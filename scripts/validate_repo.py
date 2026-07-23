@@ -131,9 +131,12 @@ def validate_evals() -> list[str]:
                 ids.add(f"{skill}:{case_id}")
             if not isinstance(case.get("prompt"), str) or not case["prompt"].strip():
                 errors.append(f"{path.relative_to(ROOT)}:{case_id}: missing prompt")
-            if not isinstance(case.get("rubric"), list) or not case["rubric"]:
+            rubric = case.get("rubric")
+            if not isinstance(rubric, list) or not rubric:
                 errors.append(f"{path.relative_to(ROOT)}:{case_id}: missing rubric")
-            for field in ("must_match", "must_not_match"):
+            elif not all(isinstance(item, str) and item.strip() for item in rubric):
+                errors.append(f"{path.relative_to(ROOT)}:{case_id}: rubric entries must be non-empty strings")
+            for field in ("must_match", "must_not_match", "redact_patterns"):
                 for pattern in case.get(field, []):
                     try:
                         re.compile(pattern)

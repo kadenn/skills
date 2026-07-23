@@ -11,7 +11,7 @@
       "rubric": [
         "Targets the difference between stable effects and identical responses.",
         "Asks one question rather than delivering a long lecture.",
-        "Uses the user's stated model as the starting point."
+        "Builds the question directly from the user's effect-versus-response model; an explicit restatement is not required."
       ]
     },
     {

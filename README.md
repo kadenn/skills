@@ -88,13 +88,15 @@ Chronos modes are `default` for event-driven context, `minimal` for explicit com
 
 ## Quality gates
 
-The `evals/` suite covers triggering, behavior, safety boundaries, and with-skill versus baseline runs. CI runs structural validation and deterministic tests. Release candidates additionally run live Codex and Claude Code evals plus install smoke tests.
+The `evals/` suite covers triggering, repeated behavior, exact safety boundaries, rubric-based LLM judging, and blind with-skill versus baseline runs. CI runs structural validation and deterministic tests. Release candidates additionally run live Codex and Claude Code evals plus install smoke tests.
 
 ```bash
 python3 scripts/validate_repo.py
 python3 -m unittest discover tests
 python3 evals/run_eval.py --agent codex --all
 python3 evals/run_eval.py --agent claude --all
+python3 evals/run_eval.py --agent codex --primary --baseline
+python3 evals/run_eval.py --agent claude --primary --baseline
 ```
 
 See [evals/README.md](evals/README.md) for the protocol and acceptance criteria.

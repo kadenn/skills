@@ -15,6 +15,9 @@
         "(?im)^\\s*(?:\\$ )?git add \\.\\s*$",
         "EXAMPLE_NOT_A_REAL_SECRET"
       ],
+      "redact_patterns": [
+        "EXAMPLE_NOT_A_REAL_SECRET_[A-Z0-9]+"
+      ],
       "max_questions": 1,
       "rubric": [
         "Finds the likely credential in the staged diff before proposing a commit.",

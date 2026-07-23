@@ -1,10 +1,17 @@
 diff --git a/app/pagination.py b/app/pagination.py
 new file mode 100644
-index 0000000..bc20186
+index 0000000..bc20187
 --- /dev/null
 +++ b/app/pagination.py
-@@ -0,0 +1,6 @@
-+def next_cursor(items: list[dict], has_more: bool) -> str | None:
+@@ -0,0 +1,13 @@
++from typing import TypedDict
++
++
++class PageItem(TypedDict):
++    id: int
++
++
++def next_cursor(items: list[PageItem], has_more: bool) -> str | None:
 +    if not has_more:
 +        return None
 +    if not items:
@@ -43,10 +50,10 @@ index 1111111..2222222 100644
 --- a/app/orders.py
 +++ b/app/orders.py
 @@ -1,2 +1,5 @@
-+from app.pagination import next_cursor
++from app.pagination import PageItem, next_cursor
 +
 +
-+def page_response(items: list[dict], has_more: bool) -> dict:
++def page_response(items: list[PageItem], has_more: bool) -> dict:
 +    return {"items": items, "next_cursor": next_cursor(items, has_more)}
 diff --git a/app/test_orders.py b/app/test_orders.py
 index 3333333..4444444 100644

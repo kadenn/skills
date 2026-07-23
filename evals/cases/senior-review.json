@@ -46,7 +46,7 @@
         "(?i)(I checked for|technically possible|not raising.*finding)"
       ],
       "rubric": [
-        "Accounts for the changed file and confirms the boundary case is tested.",
+        "Accounts for the changed files and confirms pagination boundary coverage was reviewed and tested; exact test names are not required.",
         "Does not manufacture a bug or pad the review with style nits.",
         "States any residual validation gap concisely."
       ]
