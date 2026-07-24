@@ -16,6 +16,8 @@ const DEFAULT_CONFIG = Object.freeze({
     returnGapMinutes: 30,
     focusMinutes: 60,
     stuckWindowMinutes: 15,
+    editLoopCount: 8,
+    editLoopMinutes: 30,
     longLoopMinutes: 120,
     historyMinutes: 360,
     stuckAlertCooldownMinutes: 30,
@@ -181,6 +183,8 @@ function isTimeRelevantPrompt(prompt) {
 
 function findStuckSignal(recentTools, now = Date.now(), config = {}) {
   const stuckWindowMinutes = config.stuckWindowMinutes ?? 15;
+  const editLoopCount = config.editLoopCount ?? 8;
+  const editLoopMinutes = config.editLoopMinutes ?? 30;
   const longLoopMinutes = config.longLoopMinutes ?? 120;
   const windowStart = now - (stuckWindowMinutes * 60 * 1000);
   const groups = new Map();
@@ -195,19 +199,21 @@ function findStuckSignal(recentTools, now = Date.now(), config = {}) {
     const entries = [...unsorted].sort((left, right) => left.at - right.at);
     const recent = entries.filter((entry) => entry.at >= windowStart);
     const recentFailures = recent.filter((entry) => entry.failed).length;
-    const immediateEditLoop = recent[0]?.kind === 'edit' && recent.length >= 4;
     const immediateFailureLoop = recentFailures >= 3;
 
     const failures = entries.filter((entry) => entry.failed).length;
     const span = entries.length ? entries.at(-1).at - entries[0].at : 0;
+    const sustainedEditLoop = entries[0]?.kind === 'edit'
+      && entries.length >= editLoopCount
+      && span >= editLoopMinutes * 60 * 1000;
     const longEnough = span >= longLoopMinutes * 60 * 1000;
     const longEditLoop = entries[0]?.kind === 'edit' && entries.length >= 6 && longEnough;
     const longFailureLoop = failures >= 2 && entries.length >= 6 && longEnough;
 
     let candidate = null;
-    if (immediateEditLoop || immediateFailureLoop) {
+    if (immediateFailureLoop) {
       candidate = { entries: recent, failures: recentFailures };
-    } else if (longEditLoop || longFailureLoop) {
+    } else if (sustainedEditLoop || longEditLoop || longFailureLoop) {
       candidate = { entries, failures };
     }
     if (candidate && (!best || candidate.entries.length > best.entries.length)) best = candidate;
@@ -258,7 +264,7 @@ function buildChronosBlock(state, config, nowMs = Date.now()) {
   if (mode !== 'default') parts.push(`mode ${mode}`);
   if (mode !== 'minimal' && config.trackRepetition) {
     const signal = findStuckSignal(state.recentTools, nowMs, config);
-    if (signal) parts.push(`stuck-signal ${signal}`);
+    if (signal) parts.push(`stuck-signal ${signal} (review progress; continue if productive)`);
   }
   return `[chronos: ${parts.join(' | ')}]`;
 }
@@ -288,11 +294,19 @@ function toolRecord(input, now = Date.now()) {
       failed,
     };
   }
-  const filePath = toolInput.file_path || toolInput.path || '';
+  const patchText = typeof toolInput === 'string'
+    ? toolInput
+    : toolInput.patch || toolInput.input || '';
+  const patchTargets = [...String(patchText).matchAll(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/gm)]
+    .map((match) => match[1].trim())
+    .filter(Boolean)
+    .sort();
+  const filePath = toolInput.file_path || toolInput.path || (patchTargets.length === 1 ? patchTargets[0] : '');
+  const targetKey = patchTargets.length > 1 ? patchTargets.join('\0') : filePath;
   return {
     at: now,
-    signature: `edit:${stableHash(filePath || toolName)}`,
-    label: filePath ? `edit ${path.basename(filePath)}` : 'file edit',
+    signature: `edit:${stableHash(targetKey || toolName)}`,
+    label: patchTargets.length > 1 ? `edit ${patchTargets.length} files` : (filePath ? `edit ${path.basename(filePath)}` : 'file edit'),
     kind: 'edit',
     failed,
   };

@@ -75,6 +75,9 @@ Optional hook configuration lives at `$XDG_CONFIG_HOME/kadenn-skills/config.json
     "trackRepetition": true,
     "returnGapMinutes": 30,
     "focusMinutes": 60,
+    "stuckWindowMinutes": 15,
+    "editLoopCount": 8,
+    "editLoopMinutes": 30,
     "longLoopMinutes": 120,
     "stuckAlertCooldownMinutes": 30
   },
@@ -84,7 +87,7 @@ Optional hook configuration lives at `$XDG_CONFIG_HOME/kadenn-skills/config.json
 }
 ```
 
-Chronos modes are `default` for event-driven context, `minimal` for explicit compact clock context, `always` for every prompt, `strict` for user-defined schedule enforcement, and `off`. `/chronos on` is an alias for `always`.
+Chronos modes are `default` for event-driven context, `minimal` for explicit compact clock context, `always` for every prompt, `strict` for user-defined schedule enforcement, and `off`. `/chronos on` is an alias for `always`. Repeated failures alert quickly, while successful edits require both sustained repetition and meaningful elapsed time. Loop alerts are advisory and should not interrupt productive work.
 
 ## Quality gates
 

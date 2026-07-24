@@ -72,7 +72,7 @@ test('default chronos activation is event driven', () => {
   assert.equal(runtime.chronosTrigger({ ...state, chronosMode: 'always' }, config, 'Continue.', null, now), 'always');
 });
 
-test('stuck signal requires repeated failures or repeated edits', () => {
+test('stuck signal catches repeated failures but ignores ordinary edit bursts', () => {
   const now = Date.now();
   const failed = [0, 1, 2].map((index) => ({
     at: now - ((index + 1) * 60_000),
@@ -93,7 +93,33 @@ test('stuck signal requires repeated failures or repeated edits', () => {
     kind: 'edit',
     failed: false,
   }));
-  assert.match(runtime.findStuckSignal(edits, now), /edit app.js repeated 4x/);
+  assert.equal(runtime.findStuckSignal(edits, now), null);
+});
+
+test('stuck signal requires sustained edit churn before alerting', () => {
+  const now = Date.now();
+  const edits = [35, 30, 25, 20, 15, 10, 5, 0].map((minutes) => ({
+    at: now - (minutes * 60_000),
+    signature: 'same-file',
+    label: 'edit app.js',
+    kind: 'edit',
+    failed: false,
+  }));
+  assert.match(runtime.findStuckSignal(edits, now), /edit app\.js repeated 8x in 35m/);
+});
+
+test('apply_patch edits are grouped by their actual targets', () => {
+  const first = runtime.toolRecord({
+    tool_name: 'apply_patch',
+    tool_input: { patch: '*** Begin Patch\n*** Update File: src/app.js\n*** End Patch' },
+  });
+  const second = runtime.toolRecord({
+    tool_name: 'apply_patch',
+    tool_input: { patch: '*** Begin Patch\n*** Update File: src/parser.js\n*** End Patch' },
+  });
+  assert.notEqual(first.signature, second.signature);
+  assert.equal(first.label, 'edit app.js');
+  assert.equal(second.label, 'edit parser.js');
 });
 
 test('stuck signal recognizes a long-running edit loop', () => {

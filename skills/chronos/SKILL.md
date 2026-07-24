@@ -48,7 +48,7 @@ When repetition and meaningful elapsed time are both present:
 
 When the evidence supplies both duration and repetition count, cite them approximately to justify the change in strategy. Do not announce exact elapsed seconds or mention time when it does not affect the decision.
 
-The enhanced hook can surface a `stuck-signal` during a turn when repeated failures or edits form a short loop, or when the same activity continues across a long window. Treat the signal as evidence to inspect progress, not an automatic conclusion that the work failed.
+The enhanced hook can surface a `stuck-signal` during a turn when failures repeat quickly, successful edits keep cycling for a meaningful period, or the same activity continues across a long window. A burst of successful edits is normal implementation work, not a loop. Treat the signal as a prompt to inspect progress, not an instruction to stop. Continue when the work is producing new evidence or converging.
 
 ## Respect schedules without paternalism
 
