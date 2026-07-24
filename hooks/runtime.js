@@ -12,15 +12,13 @@ const DEFAULT_CONFIG = Object.freeze({
     enabled: true,
     mode: 'default',
     timezone: null,
-    trackRepetition: true,
+    trackActivity: true,
     returnGapMinutes: 30,
     focusMinutes: 60,
-    stuckWindowMinutes: 15,
-    editLoopCount: 8,
-    editLoopMinutes: 30,
-    longLoopMinutes: 120,
-    historyMinutes: 360,
-    stuckAlertCooldownMinutes: 30,
+    fileFocusReminderMinutes: 30,
+    focusIdleMinutes: 10,
+    historyMinutes: 120,
+    focusReminderCooldownMinutes: 30,
   },
   shipit: { secretScan: true },
 });
@@ -109,7 +107,7 @@ function newState(now = Date.now()) {
     lastPromptAt: null,
     chronosMode: null,
     timeFocusUntil: null,
-    lastStuckAlertAt: null,
+    lastFocusReminderAt: null,
     recentTools: [],
   };
 }
@@ -181,48 +179,29 @@ function isTimeRelevantPrompt(prompt) {
   return clockTerms.test(text) || turkishDuration.test(text);
 }
 
-function findStuckSignal(recentTools, now = Date.now(), config = {}) {
-  const stuckWindowMinutes = config.stuckWindowMinutes ?? 15;
-  const editLoopCount = config.editLoopCount ?? 8;
-  const editLoopMinutes = config.editLoopMinutes ?? 30;
-  const longLoopMinutes = config.longLoopMinutes ?? 120;
-  const windowStart = now - (stuckWindowMinutes * 60 * 1000);
-  const groups = new Map();
-  for (const entry of recentTools || []) {
-    if (!entry) continue;
-    const list = groups.get(entry.signature) || [];
-    list.push(entry);
-    groups.set(entry.signature, list);
-  }
-  let best = null;
-  for (const unsorted of groups.values()) {
-    const entries = [...unsorted].sort((left, right) => left.at - right.at);
-    const recent = entries.filter((entry) => entry.at >= windowStart);
-    const recentFailures = recent.filter((entry) => entry.failed).length;
-    const immediateFailureLoop = recentFailures >= 3;
+function findFocusReminder(recentTools, now = Date.now(), config = {}) {
+  const reminderMinutes = config.fileFocusReminderMinutes ?? 30;
+  const focusIdleMinutes = config.focusIdleMinutes ?? 10;
+  const edits = (recentTools || [])
+    .filter((entry) => entry?.kind === 'edit')
+    .sort((left, right) => left.at - right.at);
+  if (edits.length < 2) return null;
 
-    const failures = entries.filter((entry) => entry.failed).length;
-    const span = entries.length ? entries.at(-1).at - entries[0].at : 0;
-    const sustainedEditLoop = entries[0]?.kind === 'edit'
-      && entries.length >= editLoopCount
-      && span >= editLoopMinutes * 60 * 1000;
-    const longEnough = span >= longLoopMinutes * 60 * 1000;
-    const longEditLoop = entries[0]?.kind === 'edit' && entries.length >= 6 && longEnough;
-    const longFailureLoop = failures >= 2 && entries.length >= 6 && longEnough;
+  const current = edits.at(-1);
+  if (now - current.at > focusIdleMinutes * 60 * 1000) return null;
 
-    let candidate = null;
-    if (immediateFailureLoop) {
-      candidate = { entries: recent, failures: recentFailures };
-    } else if (sustainedEditLoop || longEditLoop || longFailureLoop) {
-      candidate = { entries, failures };
-    }
-    if (candidate && (!best || candidate.entries.length > best.entries.length)) best = candidate;
+  let first = current;
+  for (let index = edits.length - 2; index >= 0; index -= 1) {
+    const entry = edits[index];
+    if (entry.signature !== current.signature) break;
+    first = entry;
   }
-  if (!best) return null;
-  const first = best.entries[0];
-  const elapsed = formatMinutes(now - first.at);
-  const suffix = best.failures ? `, ${best.failures} failed` : '';
-  return `${first.label} repeated ${best.entries.length}x in ${elapsed}${suffix}`;
+  const elapsed = current.at - first.at;
+  if (elapsed < reminderMinutes * 60 * 1000) return null;
+  const subject = current.label.startsWith('edit ')
+    ? `editing ${current.label.slice(5)}`
+    : `working on ${current.label}`;
+  return `${subject} for ${formatMinutes(elapsed)}`;
 }
 
 function chronosTrigger(state, config, prompt, requestedMode = null, now = Date.now()) {
@@ -237,18 +216,18 @@ function chronosTrigger(state, config, prompt, requestedMode = null, now = Date.
   if (state.lastPromptAt && now - state.lastPromptAt >= returnGapMinutes * 60 * 1000) {
     return 'return-gap';
   }
-  if (config.trackRepetition) {
-    const signal = findStuckSignal(state.recentTools, now, config);
-    const cooldown = config.stuckAlertCooldownMinutes ?? 30;
-    if (shouldEmitStuckAlert(state, signal, now, cooldown)) return 'stuck-signal';
+  if (config.trackActivity) {
+    const reminder = findFocusReminder(state.recentTools, now, config);
+    const cooldown = config.focusReminderCooldownMinutes ?? 30;
+    if (shouldEmitFocusReminder(state, reminder, now, cooldown)) return 'focus-reminder';
   }
   return null;
 }
 
-function shouldEmitStuckAlert(state, signal, now = Date.now(), cooldownMinutes = 30) {
-  if (!signal) return false;
-  if (!state.lastStuckAlertAt) return true;
-  return now - state.lastStuckAlertAt >= cooldownMinutes * 60 * 1000;
+function shouldEmitFocusReminder(state, reminder, now = Date.now(), cooldownMinutes = 30) {
+  if (!reminder) return false;
+  if (!state.lastFocusReminderAt) return true;
+  return now - state.lastFocusReminderAt >= cooldownMinutes * 60 * 1000;
 }
 
 function buildChronosBlock(state, config, nowMs = Date.now()) {
@@ -262,9 +241,9 @@ function buildChronosBlock(state, config, nowMs = Date.now()) {
   }
   parts.push(`tz ${timezone}`);
   if (mode !== 'default') parts.push(`mode ${mode}`);
-  if (mode !== 'minimal' && config.trackRepetition) {
-    const signal = findStuckSignal(state.recentTools, nowMs, config);
-    if (signal) parts.push(`stuck-signal ${signal} (review progress; continue if productive)`);
+  if (mode !== 'minimal' && config.trackActivity) {
+    const reminder = findFocusReminder(state.recentTools, nowMs, config);
+    if (reminder) parts.push(`focus-reminder ${reminder}; possible loop, continue if progress is clear`);
   }
   return `[chronos: ${parts.join(' | ')}]`;
 }
@@ -423,7 +402,7 @@ function handleUserPrompt(input, config, now = Date.now()) {
     const focusMinutes = config.chronos.focusMinutes ?? 60;
     state.timeFocusUntil = now + focusMinutes * 60 * 1000;
   }
-  if (trigger === 'stuck-signal') state.lastStuckAlertAt = now;
+  if (trigger === 'focus-reminder') state.lastFocusReminderAt = now;
   const block = trigger ? buildChronosBlock(state, config.chronos, now) : null;
   state.lastPromptAt = now;
   writeState(input.session_id, state);
@@ -431,22 +410,22 @@ function handleUserPrompt(input, config, now = Date.now()) {
 }
 
 function handlePostTool(input, config, now = Date.now()) {
-  if (!config.chronos.enabled || !config.chronos.trackRepetition) return;
+  if (!config.chronos.enabled || !config.chronos.trackActivity) return;
   const state = readState(input.session_id) || newState(now);
   const mode = state.chronosMode || config.chronos.mode || 'default';
   if (mode === 'off' || mode === 'minimal') return;
-  const longLoopMinutes = config.chronos.longLoopMinutes ?? 120;
+  const reminderMinutes = config.chronos.fileFocusReminderMinutes ?? 30;
   const historyMinutes = Math.max(
-    config.chronos.historyMinutes ?? 360,
-    longLoopMinutes + 60,
+    config.chronos.historyMinutes ?? 120,
+    reminderMinutes + 60,
   );
   state.recentTools = [...(state.recentTools || []), toolRecord(input, now)]
     .filter((entry) => entry.at >= now - (historyMinutes * 60 * 1000))
     .slice(-100);
-  const signal = findStuckSignal(state.recentTools, now, config.chronos);
-  const cooldown = config.chronos.stuckAlertCooldownMinutes ?? 30;
-  const alert = shouldEmitStuckAlert(state, signal, now, cooldown);
-  if (alert) state.lastStuckAlertAt = now;
+  const reminder = findFocusReminder(state.recentTools, now, config.chronos);
+  const cooldown = config.chronos.focusReminderCooldownMinutes ?? 30;
+  const alert = shouldEmitFocusReminder(state, reminder, now, cooldown);
+  if (alert) state.lastFocusReminderAt = now;
   writeState(input.session_id, state);
   if (alert) emitContext('PostToolUse', buildChronosBlock(state, config.chronos, now));
 }
@@ -497,7 +476,7 @@ module.exports = {
   commitIncludesTrackedChanges,
   commitUsesShellCd,
   deniedFilename,
-  findStuckSignal,
+  findFocusReminder,
   formatDeny,
   formatMinutes,
   gitCwd,
@@ -508,7 +487,7 @@ module.exports = {
   safeCommandLabel,
   scanCommit,
   scanPatch,
-  shouldEmitStuckAlert,
+  shouldEmitFocusReminder,
   toolRecord,
   uniqueFindings,
 };

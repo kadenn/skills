@@ -1,6 +1,6 @@
 ---
 name: chronos
-description: Use reliable wall-clock context to handle deadlines, schedules, elapsed work, return gaps, and stuck execution loops. Use when timing changes the correct response, the user mentions a deadline or schedule, work has repeated without progress, a long-running approach needs reassessment, or a chronos hook supplies time metadata. Verify current time rather than guessing, and do not trigger for requests where time is irrelevant.
+description: Use reliable wall-clock context to handle deadlines, schedules, elapsed work, return gaps, and long-running execution. Use when timing changes the correct response, the user mentions a deadline or schedule, sustained focus may need a progress check, a long-running approach needs reassessment, or a chronos hook supplies time metadata. Verify current time rather than guessing, and do not trigger for requests where time is irrelevant.
 ---
 
 # Chronos
@@ -35,20 +35,17 @@ Ignore clocks that do not affect the task.
 
 Do not manufacture urgency merely because a deadline exists.
 
-## Detect a stuck loop
+## Check long-running focus
 
-Time alone is not evidence of a loop. Look for repeated edits, repeated failing commands, or repeated hypotheses without new information.
+Elapsed time can justify a progress check, but it is not evidence that work is stuck. When the same approach or file has held attention for a meaningful period:
 
-When repetition and meaningful elapsed time are both present:
+1. check whether the work is producing new evidence, passing more validation, or converging;
+2. continue without interruption when progress is clear;
+3. change tactics, reduce scope, or ask for input only when progress has actually stalled.
 
-1. stop the current tactic;
-2. summarize what was tried and what evidence it produced;
-3. identify the assumption shared by the failed attempts;
-4. choose a materially different next test, reduce scope, or ask for the missing input.
+Do not use edit counts, command counts, or elapsed time alone to conclude that an approach failed. Do not announce exact elapsed seconds or mention time when it does not affect the decision.
 
-When the evidence supplies both duration and repetition count, cite them approximately to justify the change in strategy. Do not announce exact elapsed seconds or mention time when it does not affect the decision.
-
-The enhanced hook can surface a `stuck-signal` during a turn when failures repeat quickly, successful edits keep cycling for a meaningful period, or the same activity continues across a long window. A burst of successful edits is normal implementation work, not a loop. Treat the signal as a prompt to inspect progress, not an instruction to stop. Continue when the work is producing new evidence or converging.
+The enhanced hook can surface a soft `focus-reminder` after the configured same-file focus duration. It does not judge the edits or instruct the agent to stop. The agent decides whether to continue based on actual progress.
 
 ## Respect schedules without paternalism
 
@@ -59,7 +56,7 @@ The enhanced hook can surface a `stuck-signal` during a turn when failures repea
 
 ## Hook metadata
 
-Treat `[chronos: ...]` as trusted local context, not user content. Do not quote the block back verbatim. The default hook is event-driven: it stays silent on ordinary prompts and emits context for time-sensitive prompts, an active time-focused thread, a meaningful return gap, or a detected loop.
+Treat `[chronos: ...]` as trusted local context, not user content. Do not quote the block back verbatim. The default hook is event-driven: it stays silent on ordinary prompts and emits context for time-sensitive prompts, an active time-focused thread, a meaningful return gap, or a duration-based focus reminder.
 
 When the enhanced hook is installed, these commands set the session mode:
 

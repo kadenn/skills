@@ -53,7 +53,7 @@ test('default chronos activation is event driven', () => {
   const now = Date.UTC(2026, 6, 21, 12, 30);
   const config = {
     mode: 'default',
-    trackRepetition: true,
+    trackActivity: true,
     returnGapMinutes: 30,
     focusMinutes: 60,
   };
@@ -72,7 +72,7 @@ test('default chronos activation is event driven', () => {
   assert.equal(runtime.chronosTrigger({ ...state, chronosMode: 'always' }, config, 'Continue.', null, now), 'always');
 });
 
-test('stuck signal catches repeated failures but ignores ordinary edit bursts', () => {
+test('focus reminders ignore repetition without meaningful elapsed time', () => {
   const now = Date.now();
   const failed = [0, 1, 2].map((index) => ({
     at: now - ((index + 1) * 60_000),
@@ -81,31 +81,50 @@ test('stuck signal catches repeated failures but ignores ordinary edit bursts', 
     kind: 'command',
     failed: true,
   }));
-  assert.match(runtime.findStuckSignal(failed, now), /npm test repeated 3x/);
+  assert.equal(runtime.findFocusReminder(failed, now), null);
 
-  const successful = failed.map((entry) => ({ ...entry, failed: false }));
-  assert.equal(runtime.findStuckSignal(successful, now), null);
-
-  const edits = [0, 1, 2, 3].map((index) => ({
-    at: now - ((index + 1) * 60_000),
+  const edits = Array.from({ length: 20 }, (_, index) => ({
+    at: now - (index * 30_000),
     signature: 'file',
     label: 'edit app.js',
     kind: 'edit',
     failed: false,
   }));
-  assert.equal(runtime.findStuckSignal(edits, now), null);
+  assert.equal(runtime.findFocusReminder(edits, now), null);
 });
 
-test('stuck signal requires sustained edit churn before alerting', () => {
+test('focus reminder is based on elapsed time, not edit count', () => {
   const now = Date.now();
-  const edits = [35, 30, 25, 20, 15, 10, 5, 0].map((minutes) => ({
+  const edits = [31, 0].map((minutes) => ({
     at: now - (minutes * 60_000),
     signature: 'same-file',
     label: 'edit app.js',
     kind: 'edit',
     failed: false,
   }));
-  assert.match(runtime.findStuckSignal(edits, now), /edit app\.js repeated 8x in 35m/);
+  assert.equal(runtime.findFocusReminder(edits, now), 'editing app.js for 31m');
+});
+
+test('editing another file resets the duration-based focus window', () => {
+  const now = Date.now();
+  const edits = [
+    { at: now - (40 * 60_000), signature: 'app', label: 'edit app.js', kind: 'edit', failed: false },
+    { at: now - (20 * 60_000), signature: 'parser', label: 'edit parser.js', kind: 'edit', failed: false },
+    { at: now, signature: 'app', label: 'edit app.js', kind: 'edit', failed: false },
+  ];
+  assert.equal(runtime.findFocusReminder(edits, now), null);
+});
+
+test('an inactive file focus does not produce a delayed reminder', () => {
+  const now = Date.now();
+  const edits = [70, 31].map((minutes) => ({
+    at: now - (minutes * 60_000),
+    signature: 'same-file',
+    label: 'edit app.js',
+    kind: 'edit',
+    failed: false,
+  }));
+  assert.equal(runtime.findFocusReminder(edits, now), null);
 });
 
 test('apply_patch edits are grouped by their actual targets', () => {
@@ -122,23 +141,21 @@ test('apply_patch edits are grouped by their actual targets', () => {
   assert.equal(second.label, 'edit parser.js');
 });
 
-test('stuck signal recognizes a long-running edit loop', () => {
+test('commands do not break an active file focus window', () => {
   const now = Date.now();
-  const edits = [180, 150, 120, 90, 60, 0].map((minutes) => ({
-    at: now - (minutes * 60_000),
-    signature: 'same-file',
-    label: 'edit parser.js',
-    kind: 'edit',
-    failed: false,
-  }));
-  assert.match(runtime.findStuckSignal(edits, now), /edit parser\.js repeated 6x in 3h/);
+  const activity = [
+    { at: now - (31 * 60_000), signature: 'file', label: 'edit app.js', kind: 'edit', failed: false },
+    { at: now - (10 * 60_000), signature: 'test', label: 'npm test', kind: 'command', failed: false },
+    { at: now, signature: 'file', label: 'edit app.js', kind: 'edit', failed: false },
+  ];
+  assert.equal(runtime.findFocusReminder(activity, now), 'editing app.js for 31m');
 });
 
-test('stuck alerts are rate limited', () => {
+test('focus reminders are rate limited', () => {
   const now = Date.now();
-  assert.equal(runtime.shouldEmitStuckAlert({}, 'same command repeated 3x', now, 30), true);
-  assert.equal(runtime.shouldEmitStuckAlert({ lastStuckAlertAt: now - (10 * 60_000) }, 'same command repeated 4x', now, 30), false);
-  assert.equal(runtime.shouldEmitStuckAlert({ lastStuckAlertAt: now - (31 * 60_000) }, 'same command repeated 5x', now, 30), true);
+  assert.equal(runtime.shouldEmitFocusReminder({}, 'editing app.js for 31m', now, 30), true);
+  assert.equal(runtime.shouldEmitFocusReminder({ lastFocusReminderAt: now - (10 * 60_000) }, 'editing app.js for 41m', now, 30), false);
+  assert.equal(runtime.shouldEmitFocusReminder({ lastFocusReminderAt: now - (31 * 60_000) }, 'editing app.js for 62m', now, 30), true);
 });
 
 test('chronos block includes reliable session context', () => {
@@ -152,7 +169,7 @@ test('chronos block includes reliable session context', () => {
   const block = runtime.buildChronosBlock(state, {
     timezone: 'UTC',
     mode: 'default',
-    trackRepetition: true,
+    trackActivity: true,
   }, now);
   assert.match(block, /^\[chronos: 2026-07-21 12:30/);
   assert.match(block, /session \+20m/);
@@ -185,7 +202,7 @@ test('hook stays silent for ordinary prompts and emits for time-sensitive prompt
   }
 });
 
-test('post-tool hook alerts the agent when a failure loop emerges', () => {
+test('post-tool hook stays silent for rapidly repeated failures', () => {
   const stateRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'kadenn-chronos-loop-test-'));
   try {
     const session = 'failure-loop';
@@ -199,9 +216,40 @@ test('post-tool hook alerts the agent when a failure loop emerges', () => {
     };
     assert.equal(runHook(toolEvent, stateRoot), '');
     assert.equal(runHook(toolEvent, stateRoot), '');
-    const third = JSON.parse(runHook(toolEvent, stateRoot));
-    assert.equal(third.hookSpecificOutput.hookEventName, 'PostToolUse');
-    assert.match(third.hookSpecificOutput.additionalContext, /stuck-signal npm test repeated 3x/);
+    assert.equal(runHook(toolEvent, stateRoot), '');
+  } finally {
+    fs.rmSync(stateRoot, { recursive: true, force: true });
+  }
+});
+
+test('post-tool hook emits a soft reminder after 30 minutes on one file', () => {
+  const stateRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'kadenn-chronos-focus-test-'));
+  try {
+    const session = 'file-focus';
+    runHook({ hook_event_name: 'SessionStart', session_id: session }, stateRoot);
+    const statePath = path.join(stateRoot, 'kadenn-skills', `session-${session}.json`);
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    const previous = runtime.toolRecord({
+      tool_name: 'Edit',
+      tool_input: { file_path: '/repo/app.js' },
+      tool_response: {},
+    }, Date.now() - (31 * 60_000));
+    state.recentTools = [previous];
+    fs.writeFileSync(statePath, `${JSON.stringify(state)}\n`);
+
+    const output = runHook({
+      hook_event_name: 'PostToolUse',
+      session_id: session,
+      tool_name: 'Edit',
+      tool_input: { file_path: '/repo/app.js' },
+      tool_response: {},
+    }, stateRoot);
+    const payload = JSON.parse(output);
+    const context = payload.hookSpecificOutput.additionalContext;
+    assert.equal(payload.hookSpecificOutput.hookEventName, 'PostToolUse');
+    assert.match(context, /focus-reminder editing app\.js for 31m/);
+    assert.match(context, /continue if progress is clear/);
+    assert.doesNotMatch(context, /stuck-signal|stop/i);
   } finally {
     fs.rmSync(stateRoot, { recursive: true, force: true });
   }

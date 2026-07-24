@@ -19,24 +19,24 @@
       ]
     },
     {
-      "id": "break-a-timed-loop",
-      "prompt": "We have spent 18 minutes editing the same parser and running the same failing test four times. Each attempt assumes the input is valid UTF-8. What should we do next?",
+      "id": "treat-focus-reminder-as-advisory",
+      "prompt": "Chronos says I have been editing parser.js for 31 minutes and may be in a loop. During that time the failing cases dropped from 12 to 2 and each edit addressed a different edge case. Should I stop this approach?",
       "must_match": [
-        "(?i)(stop|change|different)",
-        "(?i)(UTF-8|encoding|assumption)",
-        "(?i)(inspect|capture|minimal|bytes|fixture|check.*input|validat.*encoding)"
+        "(?i)(continue|keep)",
+        "(?i)(progress|12 to 2|converg)",
+        "(?i)(reminder|advisory|not.*verdict|not.*stuck)"
       ],
-      "must_not_match": ["(?i)(try the same test again|one more identical)"],
+      "must_not_match": ["(?i)(stop immediately|must stop|definitely stuck)"],
       "max_questions": 1,
       "rubric": [
-        "Uses both repetition and elapsed time as evidence of a loop.",
-        "Challenges the shared UTF-8 assumption.",
-        "Proposes a materially different diagnostic test."
+        "Treats the duration-based reminder as a progress check rather than a verdict.",
+        "Uses the improving failure count as concrete evidence that the work is converging.",
+        "Allows the productive approach to continue while suggesting a proportionate checkpoint."
       ]
     },
     {
       "id": "reassess-a-long-running-loop",
-      "prompt": "This session has spent three hours editing the same parser and running the same two failing checks. The last six attempts all assumed the tokenizer is correct. Decide whether to continue and give the next action.",
+      "prompt": "This session has spent three hours on the same parser. The same two checks still fail, the outputs have not changed, and every attempted fix assumes the tokenizer is correct. Decide whether to continue and give the next action.",
       "must_match": [
         "(?i)(three hours|3 hours|long-running)",
         "(?i)(stop|reassess|change|different|do not continue)",
@@ -46,8 +46,8 @@
       "must_not_match": ["(?i)(keep trying the same|another identical attempt)"],
       "max_questions": 1,
       "rubric": [
-        "Treats elapsed time plus repeated evidence as a reason to stop the current tactic.",
-        "Identifies the shared tokenizer assumption instead of blaming time alone.",
+        "Uses the unchanged failures and outputs, not elapsed time alone, as evidence that progress stalled.",
+        "Identifies the shared tokenizer assumption instead of treating the reminder as a verdict.",
         "Chooses a materially different diagnostic action."
       ]
     },
